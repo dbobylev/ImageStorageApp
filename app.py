@@ -95,7 +95,7 @@ def upload_image():
     image_url_with_password = f"{image_url}?p={password}"
 
     # Логирование события загрузки файла
-    logging.info(f"Добавлен файл {filename}, IP: {request.remote_addr}")
+    logging.info(f"POST {filename}, IP: {request.remote_addr}")
     
     return jsonify({'image_url': image_url_with_password})
 
@@ -119,7 +119,7 @@ def view_image(year, month, day, filename):
         abort(400, description="Неверный пароль или ошибка расшифровки.")
 
     # Логирование события запроса файла
-    logging.info(f"Запросили файл {filename}, IP: {request.remote_addr}")
+    logging.info(f"GET {filename}, IP: {request.remote_addr}")
     
     # Отправка изображения пользователю
     return send_file(
@@ -130,6 +130,4 @@ def view_image(year, month, day, filename):
     )
 
 if __name__ == '__main__':
-    #app.run(debug=True)
-    #app.run()
     serve(app, host="0.0.0.0", port=5000)

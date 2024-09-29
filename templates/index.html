@@ -95,18 +95,24 @@
     </script>
 </head>
 <body>
-    <h1>Загрузите изображение</h1>
+    <h1>Загрузите изображение одним из способов:</h1>
     
-    <!-- Перетаскивание -->
-    <div id="drop-area">
-        Перетащите сюда изображение
-    </div>
+    <br/>
 
     <!-- Загрузка с диска -->
     <div class="file-input">
         <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)">
     </div>
 
+    <br/>
+
     <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
+
+    <br/>
+
+    <!-- Перетаскивание -->
+    <div id="drop-area" style="height: 400px;">
+        Или перетащите сюда изображение
+    </div>
 </body>
 </html>
