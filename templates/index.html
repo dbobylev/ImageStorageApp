@@ -45,18 +45,25 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        // Если ответ не успешный, возвращаем ошибку
+                        throw new Error(data.error || 'Ошибка загрузки изображения');
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.image_url) {
                     navigator.clipboard.writeText(data.image_url).then(function() {
                         alert("Ссылка на изображение скопирована в буфер обмена: " + data.image_url);
                     });
-                } else {
-                    alert("Ошибка загрузки изображения");
                 }
             })
             .catch(error => {
-                console.error("Ошибка:", error);
+                // Здесь мы обрабатываем ошибки, включая ошибку размера файла
+                alert("Ошибка: " + error.message);
             });
         }
 
@@ -96,23 +103,23 @@
 </head>
 <body>
     <h1>Загрузите изображение одним из способов:</h1>
-    
     <br/>
-
     <!-- Загрузка с диска -->
     <div class="file-input">
         <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)">
     </div>
-
     <br/>
-
     <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
-
     <br/>
-
     <!-- Перетаскивание -->
-    <div id="drop-area" style="height: 400px;">
-        Или перетащите сюда изображение
+    <div id="drop-area" style="height: 300px;">
+        Или перетащите изображение сюда
     </div>
+    <ul>
+        <li>Максимальный размер файла - 5 Мб</li>
+        <li>Файл загрузиться на сервер и будет доступен по сгенерированной ссылке</li>
+        <li>На сервере файл хранится в зашифрованном состоянии и не доступен для просмотра</li>
+        <li>Срок хранения файла - 1 месяц</li>
+    </ul>
 </body>
 </html>

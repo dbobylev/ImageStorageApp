@@ -15,6 +15,9 @@ app = Flask(__name__)
 BASE_UPLOAD_FOLDER = 'static/uploads/'
 app.config['UPLOAD_FOLDER'] = BASE_UPLOAD_FOLDER
 
+# Установите максимальный размер файла в 5 МБ
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 МБ в байтах
+
 # Настройка логирования
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
@@ -128,6 +131,10 @@ def view_image(year, month, day, filename):
         as_attachment=False,
         download_name=filename
     )
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({'error': 'Размер файла превышает 5 МБ'}), 413
 
 if __name__ == '__main__':
     serve(app, host="0.0.0.0", port=5000)
