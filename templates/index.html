@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Uploader</title>
+    <style>
+        #drop-area {
+            border: 2px dashed #ccc;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        #drop-area.hover {
+            border-color: #333;
+        }
+        .file-input {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        // Функция обработки события вставки
+        document.addEventListener('paste', function (event) {
+            const clipboardItems = event.clipboardData.items;
+            
+            for (let i = 0; i < clipboardItems.length; i++) {
+                const item = clipboardItems[i];
+                
+                if (item.type.indexOf("image") !== -1) {
+                    const file = item.getAsFile();
+                    
+                    if (file) {
+                        uploadImage(file);
+                    }
+                }
+            }
+        });
+
+        // Функция для загрузки изображения на сервер
+        function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image_url) {
+                    navigator.clipboard.writeText(data.image_url).then(function() {
+                        alert("Ссылка на изображение скопирована в буфер обмена: " + data.image_url);
+                    });
+                } else {
+                    alert("Ошибка загрузки изображения");
+                }
+            })
+            .catch(error => {
+                console.error("Ошибка:", error);
+            });
+        }
+
+        // Поддержка перетаскивания
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            
+            for (let i = 0; i < files.length; i++) {
+                uploadImage(files[i]);
+            }
+        }
+
+        function handleFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                uploadImage(files[i]);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let dropArea = document.getElementById('drop-area');
+
+            dropArea.addEventListener('dragenter', preventDefaults, false);
+            dropArea.addEventListener('dragover', preventDefaults, false);
+            dropArea.addEventListener('dragleave', preventDefaults, false);
+            dropArea.addEventListener('drop', function(e) {
+                preventDefaults(e);
+                handleDrop(e);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Загрузите изображение</h1>
+    
+    <!-- Перетаскивание -->
+    <div id="drop-area">
+        Перетащите сюда изображение
+    </div>
+
+    <!-- Загрузка с диска -->
+    <div class="file-input">
+        <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)">
+    </div>
+
+    <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
+</body>
+</html>
