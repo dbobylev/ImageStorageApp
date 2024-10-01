@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify, send_file, abort, ur
 from cryptography.fernet import Fernet
 import io
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from waitress import serve
 
 app = Flask(__name__)
@@ -19,7 +20,12 @@ app.config['UPLOAD_FOLDER'] = BASE_UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 МБ в байтах
 
 # Настройка логирования
-logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(message)s')
+handler = TimedRotatingFileHandler('app.log', when='D', interval=1, backupCount=7) 
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 # Проверяем, существует ли базовая папка для загрузок, и создаем её, если нет
 if not os.path.exists(BASE_UPLOAD_FOLDER):
