@@ -1,19 +1,14 @@
-import os
-import uuid
-import random
-import string
+import os, random, string, io, logging, hashlib, base64, glob
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file, abort, url_for
 from cryptography.fernet import Fernet
-import io
-import logging
 from logging.handlers import TimedRotatingFileHandler
 from waitress import serve
 
 app = Flask(__name__)
 
 # Папка для хранения загруженных изображений
-BASE_UPLOAD_FOLDER = 'static/uploads/'
+BASE_UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = BASE_UPLOAD_FOLDER
 
 # Установите максимальный размер файла в 5 МБ
@@ -32,7 +27,7 @@ if not os.path.exists(BASE_UPLOAD_FOLDER):
     os.makedirs(BASE_UPLOAD_FOLDER)
 
 # Функция для генерации случайного имени файла (8 символов)
-def generate_filename():
+def generate_link():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=8))
 
 # Функция для создания папки на основе текущей даты
@@ -47,9 +42,27 @@ def create_date_folder():
     
     return day_folder
 
-# Генерация ключа шифрования (ключ может быть различным для каждого файла)
-def generate_key():
-    return Fernet.generate_key()
+def decodelink(link: str):
+    keyhash = hashlib.sha256(link.encode()).hexdigest()
+    key = base64.urlsafe_b64encode(bytes.fromhex(keyhash))
+    file = hashlib.sha256(keyhash.encode()).hexdigest()[:16]
+    return file, key
+
+def find_full_file_path(file_path_without_ext):
+    # Получаем директорию файла
+    directory = os.path.dirname(file_path_without_ext)
+    # Получаем имя файла без расширения
+    file_name = os.path.basename(file_path_without_ext)
+    
+    # Используем glob для поиска файлов с таким же именем, но любым расширением
+    search_pattern = os.path.join(directory, file_name + '.*')
+    found_files = glob.glob(search_pattern)
+    
+    if found_files:
+        # Возвращаем первый найденный файл
+        return found_files[0], os.path.basename(found_files[0])
+    else:
+        return None
 
 # Шифрование файла
 def encrypt_file(file_path, key):
@@ -84,46 +97,43 @@ def upload_image():
     if file.filename == '':
         return jsonify({'error': 'Файл не выбран'}), 400
     
+    link = generate_link()
+
+    filename_without_ext, key = decodelink(link)
+
     # Генерация случайного имени файла и создание папки на основе текущей даты
-    filename = generate_filename() + os.path.splitext(file.filename)[1]
+    filename =filename_without_ext + os.path.splitext(file.filename)[1]
     folder_path = create_date_folder()
     file_path = os.path.join(folder_path, filename)
     
     # Сохранение изображения
     file.save(file_path)
-    
-    # Генерация ключа шифрования
-    key = generate_key()
-    
+       
     # Шифрование файла
     encrypt_file(file_path, key)
     
     # Генерация ссылки с паролем
-    image_url = url_for('view_image', year=datetime.now().year, month=datetime.now().month, day=datetime.now().day, filename=filename, _external=True)
-    password = key.decode('utf-8')
-    image_url_with_password = f"{image_url}?p={password}"
+    image_url = url_for('view_link', year=datetime.now().year, month=datetime.now().month, day=datetime.now().day, link=link, _external=True)
 
     # Логирование события загрузки файла
     logging.info(f"POST {filename}, IP: {request.remote_addr}")
     
-    return jsonify({'image_url': image_url_with_password})
+    return jsonify({'image_url': image_url})
 
-@app.route('/view/<int:year>/<int:month>/<int:day>/<filename>', methods=['GET'])
-def view_image(year, month, day, filename):
-    password = request.args.get('p')
+@app.route('/<int:year>/<int:month>/<int:day>/<link>', methods=['GET'])
+def view_link(year, month, day, link):
     
-    if not password:
-        abort(400, description="Не указан пароль для расшифровки.")
-    
+    filename_without_ext, key = decodelink(link)
+
     # Путь к зашифрованному файлу
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], str(year), str(month), str(day), filename)
+    file_path, filename = find_full_file_path(os.path.join(app.config['UPLOAD_FOLDER'], str(year), str(month), str(day), filename_without_ext))
     
     if not os.path.exists(file_path):
         abort(404, description="Файл не найден.")
     
     try:
         # Попытка расшифровки файла
-        decrypted_data = decrypt_file(file_path, password.encode('utf-8'))
+        decrypted_data = decrypt_file(file_path, key)
     except Exception as e:
         abort(400, description="Неверный пароль или ошибка расшифровки.")
 
