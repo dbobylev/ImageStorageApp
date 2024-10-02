@@ -45,25 +45,26 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        // Если ответ не успешный, возвращаем ошибку
-                        throw new Error(data.error || 'Ошибка загрузки изображения');
-                    });
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                if (data.image_url) {
-                    navigator.clipboard.writeText(data.image_url).then(function() {
-                        alert("Ссылка на изображение скопирована в буфер обмена: " + data.image_url);
-                    });
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    let link = data.image_url;
+                    // Создаем временный элемент для копирования текста в буфер обмена
+                    const tempInput = document.createElement('input');
+                    document.body.appendChild(tempInput);
+                    tempInput.value = window.location.origin + link;
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+
+                    alert('Ваш файл доступен по ссылке: ' + data.image_url);
                 }
             })
             .catch(error => {
-                // Здесь мы обрабатываем ошибки, включая ошибку размера файла
-                alert("Ошибка: " + error.message);
+                console.error(error);
+                alert('Ошибка загрузки файла');
             });
         }
 
