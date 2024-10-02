@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Uploader</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='styles/simple.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='styles/background.css')}}">    
     <style>
         #drop-area {
             border: 2px dashed #ccc;
@@ -14,113 +16,109 @@
         #drop-area.hover {
             border-color: #333;
         }
-        .file-input {
-            margin-top: 20px;
+        div, p{
+            text-align: center;
         }
     </style>
-    <script>
-        // Функция обработки события вставки
-        document.addEventListener('paste', function (event) {
-            const clipboardItems = event.clipboardData.items;
-            
-            for (let i = 0; i < clipboardItems.length; i++) {
-                const item = clipboardItems[i];
-                
-                if (item.type.indexOf("image") !== -1) {
-                    const file = item.getAsFile();
-                    
-                    if (file) {
-                        uploadImage(file);
-                    }
-                }
-            }
-        });
-
-        // Функция для загрузки изображения на сервер
-        function uploadImage(file) {
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    let link = data.image_url;
-                    // Создаем временный элемент для копирования текста в буфер обмена
-                    const tempInput = document.createElement('input');
-                    document.body.appendChild(tempInput);
-                    tempInput.value = window.location.origin + link;
-                    tempInput.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tempInput);
-
-                    alert('Ваш файл доступен по ссылке: ' + data.image_url);
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                alert('Ошибка загрузки файла');
-            });
-        }
-
-        // Поддержка перетаскивания
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        function handleDrop(e) {
-            let dt = e.dataTransfer;
-            let files = dt.files;
-            
-            for (let i = 0; i < files.length; i++) {
-                uploadImage(files[i]);
-            }
-        }
-
-        function handleFiles(files) {
-            for (let i = 0; i < files.length; i++) {
-                uploadImage(files[i]);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            let dropArea = document.getElementById('drop-area');
-
-            dropArea.addEventListener('dragenter', preventDefaults, false);
-            dropArea.addEventListener('dragover', preventDefaults, false);
-            dropArea.addEventListener('dragleave', preventDefaults, false);
-            dropArea.addEventListener('drop', function(e) {
-                preventDefaults(e);
-                handleDrop(e);
-            });
-        });
-    </script>
 </head>
 <body>
-    <h1>Загрузите изображение одним из способов:</h1>
-    <br/>
-    <!-- Загрузка с диска -->
-    <div class="file-input">
-        <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)">
+    <div style="background-color: #ffffffbb;">
+        <h3>Загрузите изображение одним из способов:</h3>
+        <!-- Загрузка с диска -->
+        <div class="file-input">
+            <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)" style="display: none;" >
+            <input type="button" value="Выберите файл" onclick="document.getElementById('fileElem').click();" />        
+        </div>
+        <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
+        <!-- Перетаскивание -->
+        <div id="drop-area">
+            <p>Или перетащите изображение сюда</p>
+        </div>
+        <ul>
+            <li>Максимальный размер файла - 5 Мб</li>
+            <li>Срок хранения файла - 1 месяц</li>
+            <li>Файл загрузится на сервер и будет доступен по сгенерированной ссылке</li>
+            <li>На сервере файл хранится в зашифрованном состоянии и не доступен для просмотра</li>
+        </ul>
     </div>
-    <br/>
-    <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
-    <br/>
-    <!-- Перетаскивание -->
-    <div id="drop-area" style="height: 300px;">
-        Или перетащите изображение сюда
-    </div>
-    <ul>
-        <li>Максимальный размер файла - 5 Мб</li>
-        <li>Файл загрузиться на сервер и будет доступен по сгенерированной ссылке</li>
-        <li>На сервере файл хранится в зашифрованном состоянии и не доступен для просмотра</li>
-        <li>Срок хранения файла - 1 месяц</li>
-    </ul>
 </body>
+<script>
+    let dropArea = document.getElementById('drop-area');
+
+    // Обработка перетаскивания
+    ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false)
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        for (let i = 0; i < files.length; i++) {
+            uploadImage(files[i]);
+        }
+    }
+
+    // Функция обработки события вставки
+    document.addEventListener('paste', function (event) {
+        const clipboardItems = event.clipboardData.items;
+        
+        for (let i = 0; i < clipboardItems.length; i++) {
+            const item = clipboardItems[i];
+            
+            if (item.type.indexOf("image") !== -1) {
+                const file = item.getAsFile();
+                
+                if (file) {
+                    uploadImage(file);
+                }
+            }
+        }
+    });
+
+    // Функция для загрузки изображения на сервер
+    function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                let link = data.image_url;
+                // Создаем временный элемент для копирования текста в буфер обмена
+                const tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = link;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+
+                alert('Ваш файл доступен по ссылке: ' + data.image_url);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Ошибка загрузки файла');
+        });
+    }
+
+
+    function handleFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+            uploadImage(files[i]);
+        }
+    }
+</script>
 </html>
