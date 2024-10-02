@@ -21,25 +21,23 @@
     </style>
 </head>
 <body>
-    <div style="background-color: #ffffffbb;">
-        <h3>Загрузите изображение одним из способов:</h3>
-        <!-- Загрузка с диска -->
-        <div class="file-input">
-            <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)" style="display: none;" >
-            <input type="button" value="Выберите файл" onclick="document.getElementById('fileElem').click();" />        
-        </div>
-        <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
-        <!-- Перетаскивание -->
-        <div id="drop-area">
-            <p>Или перетащите изображение сюда</p>
-        </div>
-        <ul>
-            <li>Максимальный размер файла - 5 Мб</li>
-            <li>Срок хранения файла - 1 месяц</li>
-            <li>Файл загрузится на сервер и будет доступен по сгенерированной ссылке</li>
-            <li>На сервере файл хранится в зашифрованном состоянии и не доступен для просмотра</li>
-        </ul>
+    <h3>Загрузите изображение одним из способов:</h3>
+    <!-- Загрузка с диска -->
+    <div class="file-input">
+        <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)" style="display: none;" >
+        <input type="button" value="Выберите файл" onclick="document.getElementById('fileElem').click();" />        
     </div>
+    <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
+    <!-- Перетаскивание -->
+    <div id="drop-area">
+        <p>Или перетащите изображение сюда</p>
+    </div>
+    <ul>
+        <li>Максимальный размер файла - 5 Мб</li>
+        <li>Срок хранения файла - 1 месяц</li>
+        <li>Файл загрузится на сервер и будет доступен по сгенерированной ссылке</li>
+        <li>На сервере файл хранится в зашифрованном состоянии и не доступен для просмотра</li>
+    </ul>
 </body>
 <script>
     let dropArea = document.getElementById('drop-area');
