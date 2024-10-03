@@ -27,7 +27,7 @@
         <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)" style="display: none;" >
         <input type="button" value="Выберите файл" onclick="document.getElementById('fileElem').click();" />        
     </div>
-    <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена.</p>
+    <p>Или нажмите Ctrl+V для вставки изображения из буфера обмена</p>
     <!-- Перетаскивание -->
     <div id="drop-area">
         <p>Или перетащите изображение сюда</p>
@@ -102,7 +102,7 @@
                 document.execCommand('copy');
                 document.body.removeChild(tempInput);
 
-                alert('Ваш файл доступен по ссылке: ' + data.image_url);
+                alert('Ссылка на изображение скопирована в буфер обмена\n' + data.image_url);
             }
         })
         .catch(error => {
